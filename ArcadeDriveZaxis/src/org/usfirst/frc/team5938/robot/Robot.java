@@ -6,8 +6,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.PIDOutput;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -81,13 +79,13 @@ public class Robot extends IterativeRobot implements PIDOutput{
 	@Override
 	public void teleopPeriodic() {
 		
-		while (isOperatorControl() && isEnabled()){
-			myRobot.setSensitivity(.5);
+		myRobot.setSensitivity(.5);
+		
+		while (isOperatorControl() && isEnabled()) {
 			myRobot.arcadeDrive(mainStick , 1, mainStick, 2, true);
 			
 			Timer.delay(0.020); /* wait for one motor update time period (50Hz)     */
 			}
-	         
 
 	          /* Display 6-axis Processed Angle Data                                      */
 
