@@ -34,7 +34,10 @@ public class Robot extends IterativeRobot {
 	
 	UsbCamera cam;
 	UsbCamera cam1;
-
+	
+	boolean buttonPress;
+	int lowerAngle = 50;
+	int upperAngle = 75;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -55,7 +58,7 @@ public class Robot extends IterativeRobot {
 		xbox = new Joystick(0);
 		mainStick = new Joystick(1); // set to ID 1 in DriverStation
 		
-		intake = new CANTalon(1);
+		intake = new CANTalon(1); 
 		shooter = new CANTalon(2);
 		winch = new CANTalon (3);
 	}
@@ -103,7 +106,7 @@ public class Robot extends IterativeRobot {
 		myRobot.setSensitivity(.5);
 		
 		while (isOperatorControl() && isEnabled()) {
-			
+			buttonPress = false;
 			myRobot.arcadeDrive(driveStick , 1, driveStick, 2, true);
 			
 			
@@ -136,7 +139,7 @@ public class Robot extends IterativeRobot {
 				winch.set(0);
 			
 			}
-	if(driveStick.getRawButton(1))
+				if(driveStick.getRawButton(1))
 				{	
 
 					while(buttonPress)
@@ -231,10 +234,10 @@ public class Robot extends IterativeRobot {
 	public void rotateBot() {
 		
 
-		if(RobotVars.lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= RobotVars.upperAngle){
+		if(lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle){
 
 			robot.drive(0, 0);
-			buttonPress = false;
+			buttonPress = true;
 
 		}
 	}
