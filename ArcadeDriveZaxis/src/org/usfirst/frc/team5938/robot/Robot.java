@@ -10,6 +10,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.DriverStation;
+
+import com.kauailabs.navx.frc.AHRS;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -34,10 +37,13 @@ public class Robot extends IterativeRobot {
 	
 	UsbCamera cam;
 	UsbCamera cam1;
+	AHRS ahrs;
 	
 	boolean buttonPress;
 	int lowerAngle = 50;
 	int upperAngle = 75;
+	
+	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -56,7 +62,7 @@ public class Robot extends IterativeRobot {
 		myRobot = new RobotDrive(0, 1); // class that handles basic drive operations
 		
 		xbox = new Joystick(0);
-		mainStick = new Joystick(1); // set to ID 1 in DriverStation
+		driveStick = new Joystick(1); // set to ID 1 in DriverStation
 		
 		intake = new CANTalon(1); 
 		shooter = new CANTalon(2);
@@ -106,7 +112,7 @@ public class Robot extends IterativeRobot {
 		myRobot.setSensitivity(.5);
 		
 		while (isOperatorControl() && isEnabled()) {
-			buttonPress = false;
+			buttonPress = true;
 			myRobot.arcadeDrive(driveStick , 1, driveStick, 2, true);
 			
 			
@@ -139,26 +145,24 @@ public class Robot extends IterativeRobot {
 				winch.set(0);
 			
 			}
-				if(driveStick.getRawButton(1))
-				{	
+			
+			if (driveStick.getRawButton(1)) {	
 
-					while(buttonPress)
-					{
-
-						myRobot.arcadeDrive(.1, .5);
-						myRobot.arcadeDrive(.1, -.5);
-						rotateBot();
-
-					}
-				}
-		
-				if(driveStick.getRawButton(2)){
+				while(buttonPress) {
 
 					myRobot.arcadeDrive(.1, .5);
-
 					myRobot.arcadeDrive(.1, -.5);
+					rotateBot();
 
 				}
+			}
+		
+			if (driveStick.getRawButton(2)) {
+
+				myRobot.arcadeDrive(.1, .5);
+				myRobot.arcadeDrive(.1, -.5);
+
+			}
 			
 			
 			
@@ -236,11 +240,10 @@ public class Robot extends IterativeRobot {
 
 		if(lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle){
 
-			robot.drive(0, 0);
-			buttonPress = true;
+			myRobot.drive(0, 0);
+			buttonPress = false;
 
 		}
 	}
 
 }
-
