@@ -45,10 +45,13 @@ public class Robot extends IterativeRobot {
 		chooser = new SendableChooser<>();
 		chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addObject("My Auto", customAuto);
+		
 		SmartDashboard.putData("Auto choices", chooser);
 		onCamera();
 		ahrsInit();
+		
 		myRobot = new RobotDrive(0, 1); // class that handles basic drive operations
+		
 		xbox = new Joystick(0);
 		mainStick = new Joystick(1); // set to ID 1 in DriverStation
 		
@@ -71,8 +74,6 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousInit() {
 		autoSelected = chooser.getSelected();
-		// autoSelected = SmartDashboard.getString("Auto Selector",
-		// defaultAuto);
 		System.out.println("Auto selected: " + autoSelected);
 	}
 
@@ -97,14 +98,16 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
+		
 		myRobot.setSafetyEnabled(true);
 		myRobot.setSensitivity(.5);
+		
 		while (isOperatorControl() && isEnabled()) {
 			
 			myRobot.arcadeDrive(driveStick , 1, driveStick, 2, true);
 			
 			
-			if (xbox.getRawAxis(2) >= .25) { //
+			if (xbox.getRawAxis(2) >= .25) {
 				
 				intake.set(1);
 			
@@ -113,7 +116,6 @@ public class Robot extends IterativeRobot {
 				intake.set(0);
 			
 			}
-		
 		
 			if (xbox.getRawAxis(3) >= .25) {
 			
