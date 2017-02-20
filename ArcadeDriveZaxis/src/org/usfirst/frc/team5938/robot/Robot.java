@@ -10,7 +10,7 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.VictorSP;
-
+import edu.wpi.first.wpilibj.CameraServer;
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
@@ -28,6 +28,7 @@ public class Robot extends IterativeRobot implements PIDOutput{
 	Joystick mainStick;
 	AHRS ahrs;
 	int autoLoopCounter;
+	CameraServer Camera;
 	
 	
 	/**
@@ -38,7 +39,9 @@ public class Robot extends IterativeRobot implements PIDOutput{
 	public void robotInit() {
 		myRobot = new RobotDrive(1, 0);
 		mainStick = new Joystick(0);
-	
+		Camera = CameraServer.getInstance();
+		Camera.setQuality(35); // set the quality of the camera
+		Camera.startAutomaticCapture("cam2");
 		 try {
 
 	          /* Communicate w/navX-MXP via the MXP SPI Bus.                                     */
