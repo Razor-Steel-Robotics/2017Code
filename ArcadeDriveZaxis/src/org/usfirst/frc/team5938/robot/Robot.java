@@ -10,7 +10,8 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.VictorSP;
-
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.CameraServer;
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
@@ -28,7 +29,8 @@ public class Robot extends IterativeRobot implements PIDOutput{
 	Joystick mainStick;
 	AHRS ahrs;
 	int autoLoopCounter;
-	
+	UsbCamera cam;
+	UsbCamera cam1;
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -36,6 +38,13 @@ public class Robot extends IterativeRobot implements PIDOutput{
 	 */
 	@Override
 	public void robotInit() {
+		cam = CameraServer.getInstance().startAutomaticCapture(0);
+		cam.setResolution(160, 120);
+		cam.setFPS(20);
+		cam1 = CameraServer.getInstance().startAutomaticCapture(1);
+		cam1.setResolution(160, 120);
+		cam1.setFPS(20);
+		
 		myRobot = new RobotDrive(1, 0);
 		mainStick = new Joystick(0);
 	
