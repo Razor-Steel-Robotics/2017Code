@@ -1,14 +1,16 @@
 package org.usfirst.frc.team5938.robot;
 
-import com.ctre.CANTalon;
-
 import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.RobotDrive;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Joystick;
+import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.VictorSP;
+import edu.wpi.first.wpilibj.CameraServer;
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
@@ -16,58 +18,53 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * creating this project, you must also update the manifest file in the resource
  * directory.
  */
-public class Robot extends IterativeRobot {
+
+public class Robot extends IterativeRobot implements PIDOutput{
 	final String defaultAuto = "Default";
 	final String customAuto = "My Auto";
 	String autoSelected;
-	SendableChooser<String> chooser;
-	
+	SendableChooser<String> chooser = new SendableChooser<>();
 	RobotDrive myRobot;
 	Joystick mainStick;
-	Joystick xbox;
+	AHRS ahrs;
+	int autoLoopCounter;
+	CameraServer Camera;
 	
-	CANTalon shooter;
-	CANTalon intake;
-	CANTalon winch;
-
+	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
 	 */
 	@Override
 	public void robotInit() {
-		
-		chooser = new SendableChooser<>();
-		chooser.addDefault("Default Auto", defaultAuto);
-		chooser.addObject("My Auto", customAuto);
-		SmartDashboard.putData("Auto choices", chooser);
-		
-		myRobot = new RobotDrive(0, 1); // class that handles basic drive operations
-		xbox = new Joystick(0);
-		mainStick = new Joystick(1); // set to ID 1 in DriverStation
-		
-		intake = new CANTalon(1);
-		shooter = new CANTalon(2);
-		winch = new CANTalon (3);
-	}
+		myRobot = new RobotDrive(1, 0);
+		mainStick = new Joystick(0);
+		Camera = CameraServer.getInstance();
+		Camera.setQuality(35); // set the quality of the camera
+		Camera.startAutomaticCapture("cam2");
+		 try {
 
-	/**
-	 * This autonomous (along with the chooser code above) shows how to select
-	 * between different autonomous modes using the dashboard. The sendable
-	 * chooser code works with the Java SmartDashboard. If you prefer the
-	 * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-	 * getString line to get the auto name from the text box below the Gyro
-	 *
-	 * You can add additional auto modes by adding additional comparisons to the
-	 * switch structure below with additional strings. If using the
-	 * SendableChooser make sure to add them to the chooser code above as well.
-	 */
+	          /* Communicate w/navX-MXP via the MXP SPI Bus.                                     */
+
+	          /* Alternatively:  I2C.Port.kMXP, SerialPort.Port.kMXP or SerialPort.Port.kUSB     */
+
+	          /* See http://navx-mxp.kauailabs.com/guidance/selecting-an-interface/ for details. */
+
+	          ahrs = new AHRS(SerialPort.Port.kUSB1); 
+		 
+		 } catch (RuntimeException ex ) {
+
+	          DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
+			 
+		 }
+		
+	}
+	
+	
 	@Override
 	public void autonomousInit() {
-		autoSelected = chooser.getSelected();
-		// autoSelected = SmartDashboard.getString("Auto Selector",
-		// defaultAuto);
-		System.out.println("Auto selected: " + autoSelected);
+	
+		
 	}
 
 	/**
@@ -75,15 +72,8 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		switch (autoSelected) {
-		case customAuto:
-			// Put custom auto code here
-			break;
-		case defaultAuto:
-		default:
-			// Put default auto code here
-			break;
-		}
+		
+		
 	}
 
 	/**
@@ -91,49 +81,47 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
-		myRobot.setSafetyEnabled(true);
+		
+		myRobot.setSensitivity(.5);
+		
 		while (isOperatorControl() && isEnabled()) {
+			myRobot.arcadeDrive(mainStick , 1, mainStick, 2, true);
 			
-			myRobot.arcadeDrive(mainStick);
-			
-			
-			if (xbox.getRawAxis(2) >= .25) { //
-				
-				intake.set(1);
-			
-			} else {
-			
-				intake.set(0);
-			
-			}
-		
-		
-			if (xbox.getRawAxis(3) >= .25) {
-			
-				shooter.set(1);
-			
-			} else {
-			
-				shooter.set(0);
-			
-			}
-			
-			if (xbox.getRawButton(1) == true) {
-				
-				winch.set(1);
-			
-			} else {
-			
-				winch.set(0);
-			
+			Timer.delay(0.020); /* wait for one motor update time period (50Hz)     */
 			}
 
-			
-			
-			
-			Timer.delay(0.005); // wait for a motor update time
-		}
+	          /* Display 6-axis Processed Angle Data                                      */
+
+	          SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
+
+	          SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
+
+	          SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
+
+	          /* These functions are compatible w/the WPI Gyro Class, providing a simple  */
+
+	          /* path for upgrading from the Kit-of-Parts gyro to the navx-MXP            */
+
+
+	          SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
+
+	          SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
+
+	          
+
+	          /* Omnimount Yaw Axis Information                                           */
+
+	          /* For more info, see http://navx-mxp.kauailabs.com/installation/omnimount  */
+
+	          AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
+
+	          SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
+
+	          SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
+
 	}
+		
+	
 
 	/**
 	 * This function is called periodically during test mode
@@ -141,5 +129,6 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void testPeriodic() {
 	}
-}
 
+	
+}
