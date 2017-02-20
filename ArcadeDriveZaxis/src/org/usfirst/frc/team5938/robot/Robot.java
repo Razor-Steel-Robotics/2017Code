@@ -43,6 +43,49 @@ public class Robot extends IterativeRobot {
 	int lowerAngle = 50;
 	int upperAngle = 75;
 	
+	public void onCamera() {
+		cam = CameraServer.getInstance().startAutomaticCapture(0);
+		cam.setResolution(160, 120);
+		cam.setFPS(20);
+		cam1 = CameraServer.getInstance().startAutomaticCapture(1);
+		cam1.setResolution(160, 120);
+		cam1.setFPS(20); 
+		
+	}
+	
+	public void ahrsInit() {
+		
+		 try {
+
+
+	          ahrs = new AHRS(SPI.Port.kMXP); 
+
+
+
+	      } catch (RuntimeException ex ) {
+
+
+
+	          DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
+
+
+
+	      }
+		
+	
+	}
+	
+	
+	public void rotateBot() {
+		
+
+		if(lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle){
+
+			myRobot.drive(0, 0);
+			buttonPress = false;
+
+		}
+	}
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -202,48 +245,5 @@ public class Robot extends IterativeRobot {
 	public void testPeriodic() {
 	}
 	
-	public void onCamera() {
-		cam = CameraServer.getInstance().startAutomaticCapture(0);
-		cam.setResolution(160, 120);
-		cam.setFPS(20);
-		cam1 = CameraServer.getInstance().startAutomaticCapture(1);
-		cam1.setResolution(160, 120);
-		cam1.setFPS(20); 
-		
-	}
-	
-	public void ahrsInit() {
-		
-		 try {
-
-
-	          ahrs = new AHRS(SPI.Port.kMXP); 
-
-
-
-	      } catch (RuntimeException ex ) {
-
-
-
-	          DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
-
-
-
-	      }
-		
-	
-	}
-	
-	
-	public void rotateBot() {
-		
-
-		if(lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle){
-
-			myRobot.drive(0, 0);
-			buttonPress = false;
-
-		}
-	}
 
 }
