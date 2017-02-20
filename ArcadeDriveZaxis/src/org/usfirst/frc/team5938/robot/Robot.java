@@ -1,7 +1,6 @@
 package org.usfirst.frc.team5938.robot;
 
 import com.ctre.CANTalon;
-import org.usfirst.frc.team5938.robot.RobotVars;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
