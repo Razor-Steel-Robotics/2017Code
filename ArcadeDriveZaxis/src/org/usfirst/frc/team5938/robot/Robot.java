@@ -1,13 +1,16 @@
 package org.usfirst.frc.team5938.robot;
 
 import com.ctre.CANTalon;
-
+import org.usfirst.frc.team5938.robot.RobotVars;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.CameraServer;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -23,12 +26,15 @@ public class Robot extends IterativeRobot {
 	SendableChooser<String> chooser;
 	
 	RobotDrive myRobot;
-	Joystick mainStick;
+	Joystick driveStick;
 	Joystick xbox;
 	
 	CANTalon shooter;
 	CANTalon intake;
 	CANTalon winch;
+	
+	UsbCamera cam;
+	UsbCamera cam1;
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -41,7 +47,8 @@ public class Robot extends IterativeRobot {
 		chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addObject("My Auto", customAuto);
 		SmartDashboard.putData("Auto choices", chooser);
-		
+		onCamera();
+		ahrsInit();
 		myRobot = new RobotDrive(0, 1); // class that handles basic drive operations
 		xbox = new Joystick(0);
 		mainStick = new Joystick(1); // set to ID 1 in DriverStation
@@ -92,9 +99,10 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopPeriodic() {
 		myRobot.setSafetyEnabled(true);
+		myRobot.setSensitivity(.5);
 		while (isOperatorControl() && isEnabled()) {
 			
-			myRobot.arcadeDrive(mainStick);
+			myRobot.arcadeDrive(driveStick , 1, driveStick, 2, true);
 			
 			
 			if (xbox.getRawAxis(2) >= .25) { //
@@ -127,12 +135,56 @@ public class Robot extends IterativeRobot {
 				winch.set(0);
 			
 			}
+	if(driveStick.getRawButton(1))
+				{	
 
+					while(buttonPress)
+					{
+
+						myRobot.arcadeDrive(.1, .5);
+						myRobot.arcadeDrive(.1, -.5);
+						rotateBot();
+
+					}
+				}
+		
+				if(driveStick.getRawButton(2)){
+
+					myRobot.arcadeDrive(.1, .5);
+
+					myRobot.arcadeDrive(.1, -.5);
+
+				}
 			
 			
 			
 			Timer.delay(0.005); // wait for a motor update time
 		}
+		
+		 SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
+
+	          SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
+
+	          SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
+
+		
+
+
+	          SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
+
+	          SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
+
+		
+
+	         
+
+	          AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
+
+	          SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
+
+	          SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
+
+
 	}
 
 	/**
@@ -141,5 +193,50 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void testPeriodic() {
 	}
+	
+	public void onCamera(){
+		cam = CameraServer.getInstance().startAutomaticCapture(0);
+		cam.setResolution(160, 120);
+		cam.setFPS(20);
+		cam1 = CameraServer.getInstance().startAutomaticCapture(1);
+		cam1.setResolution(160, 120);
+		cam1.setFPS(20); 
+		
+	}
+	
+	public void ahrsInit(){
+		
+		 try {
+
+
+	          ahrs = new AHRS(SPI.Port.kMXP); 
+
+
+
+	      } catch (RuntimeException ex ) {
+
+
+
+	          DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
+
+
+
+	      }
+		
+	
+	}
+	
+	
+	public void rotateBot()
+	{
+		
+
+		if(RobotVars.lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= RobotVars.upperAngle){
+
+			robot.drive(0, 0);
+			buttonPress = false;
+
+		}
+
 }
 
