@@ -42,11 +42,8 @@ public class Robot extends IterativeRobot implements PIDOutput{
 		 try {
 
 	          /* Communicate w/navX-MXP via the MXP SPI Bus.                                     */
-
 	          /* Alternatively:  I2C.Port.kMXP, SerialPort.Port.kMXP or SerialPort.Port.kUSB     */
-
 	          /* See http://navx-mxp.kauailabs.com/guidance/selecting-an-interface/ for details. */
-
 	          ahrs = new AHRS(SPI.Port.kMXP); 
 		 
 		 } catch (RuntimeException ex ) {
@@ -84,42 +81,27 @@ public class Robot extends IterativeRobot implements PIDOutput{
 		while (isOperatorControl() && isEnabled()) {
 			myRobot.arcadeDrive(mainStick , 1, mainStick, 2, true);
 			
-			Timer.delay(0.020); /* wait for one motor update time period (50Hz)     */
+			Timer.delay(0.05); /* wait for one motor update time period (50Hz)     */
 			}
 
 	          /* Display 6-axis Processed Angle Data                                      */
-
 	          SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
-
 	          SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
-
 	          SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
-
+		
 	          /* These functions are compatible w/the WPI Gyro Class, providing a simple  */
-
 	          /* path for upgrading from the Kit-of-Parts gyro to the navx-MXP            */
-
-
 	          SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
-
 	          SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
-
-	          
-
+		
 	          /* Omnimount Yaw Axis Information                                           */
-
 	          /* For more info, see http://navx-mxp.kauailabs.com/installation/omnimount  */
-
 	          AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
-
 	          SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
-
 	          SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
 
 	}
 		
-	
-
 	/**
 	 * This function is called periodically during test mode
 	 */
