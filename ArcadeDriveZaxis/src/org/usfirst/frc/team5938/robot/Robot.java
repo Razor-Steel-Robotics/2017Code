@@ -47,7 +47,7 @@ public class Robot extends IterativeRobot implements PIDOutput{
 
 	          /* See http://navx-mxp.kauailabs.com/guidance/selecting-an-interface/ for details. */
 
-	          ahrs = new AHRS(SerialPort.Port.kUSB1); 
+	          ahrs = new AHRS(SPI.Port.kMXP); 
 		 
 		 } catch (RuntimeException ex ) {
 
