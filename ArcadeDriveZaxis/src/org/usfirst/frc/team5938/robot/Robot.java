@@ -193,7 +193,7 @@ public class Robot extends IterativeRobot {
 	public void testPeriodic() {
 	}
 	
-	public void onCamera(){
+	public void onCamera() {
 		cam = CameraServer.getInstance().startAutomaticCapture(0);
 		cam.setResolution(160, 120);
 		cam.setFPS(20);
@@ -203,7 +203,7 @@ public class Robot extends IterativeRobot {
 		
 	}
 	
-	public void ahrsInit(){
+	public void ahrsInit() {
 		
 		 try {
 
@@ -226,8 +226,7 @@ public class Robot extends IterativeRobot {
 	}
 	
 	
-	public void rotateBot()
-	{
+	public void rotateBot() {
 		
 
 		if(RobotVars.lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= RobotVars.upperAngle){
@@ -236,6 +235,7 @@ public class Robot extends IterativeRobot {
 			buttonPress = false;
 
 		}
+	}
 
 }
 
