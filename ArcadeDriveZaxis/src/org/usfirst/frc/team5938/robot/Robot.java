@@ -67,21 +67,13 @@ public class Robot extends IterativeRobot {
 		
 		 try {
 
-
 	          ahrs = new AHRS(SPI.Port.kMXP); 
-
-
 
 	      } catch (RuntimeException ex ) {
 
-
-
 	          DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
 
-
-
 	      }
-		
 	
 	}
 	
@@ -89,7 +81,7 @@ public class Robot extends IterativeRobot {
 	public void rotateBot() {
 		
 
-		if (lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle){
+		if (lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle) {
 
 			myRobot.drive(0, 0);
 			buttonPress = false;
@@ -223,26 +215,23 @@ public class Robot extends IterativeRobot {
 		
 		SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
 
-	    SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
+	    	SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
 
-	    SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
-
-		
-
-
-	    SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
-
-	    SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
+	    	SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
 
 		
 
-	         
 
-	    AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
+	    	SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
 
-	    SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
+	    	SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
 
-	    SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
+
+	    	AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
+
+	    	SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
+
+	    	SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
 
 
 	}
