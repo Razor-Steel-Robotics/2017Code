@@ -5,12 +5,14 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
+import java.lang.Math;
 
 import com.kauailabs.navx.frc.AHRS;
 
@@ -22,28 +24,36 @@ import com.kauailabs.navx.frc.AHRS;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	
 	final String defaultAuto = "Default";
 	final String customAuto = "My Auto";
 	String autoSelected;
 	SendableChooser<String> chooser;
 	
 	RobotDrive myRobot;
-	Joystick driveStick;
-	Joystick xbox;
 	
-	CANTalon shooter;
-	CANTalon intake;
-	CANTalon winch;
+	Joystick driveStick;
+	Joystick shooterXbox;
+	
+	Joystick leftXbox;
+	Joystick rightXbox;
+	
+	VictorSP electricSolenoid;
+	
+	CANTalon intake; //Device ID 1
+	CANTalon shooter; //Device ID 2
+	CANTalon winch; //Device ID 3
 	
 	UsbCamera cam;
 	UsbCamera cam1;
-	AHRS ahrs;
 	
+	AHRS ahrs;
 	boolean buttonPress;
 	int lowerAngle = 50;
 	int upperAngle = 75;
 	
 	public void onCamera() {
+		
 		cam = CameraServer.getInstance().startAutomaticCapture(0);
 		cam.setResolution(160, 120);
 		cam.setFPS(20);
@@ -79,7 +89,7 @@ public class Robot extends IterativeRobot {
 	public void rotateBot() {
 		
 
-		if(lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle){
+		if (lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle){
 
 			myRobot.drive(0, 0);
 			buttonPress = false;
@@ -104,12 +114,14 @@ public class Robot extends IterativeRobot {
 		
 		myRobot = new RobotDrive(0, 1); // class that handles basic drive operations
 		
-		xbox = new Joystick(0);
+		shooterXbox = new Joystick(0);
 		driveStick = new Joystick(1); // set to ID 1 in DriverStation
-		
 		intake = new CANTalon(1); 
 		shooter = new CANTalon(2);
 		winch = new CANTalon (3);
+		
+		electricSolenoid = new VictorSP(2);
+		
 	}
 
 	/**
@@ -152,36 +164,18 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		
 		myRobot.setSafetyEnabled(true);
-		myRobot.setSensitivity(.5);
 		
 		while (isOperatorControl() && isEnabled()) {
-			buttonPress = true;
-			myRobot.arcadeDrive(driveStick , 1, driveStick, 2, true);
+			
+			myRobot.tankDrive(Math.pow(shooterXbox.getRawAxis(5) * .87, 3), Math.pow(shooterXbox.getRawAxis(1) * .87, 3));
+			//Cubic acceleration decreases jolting, allowing for smoother driving
 			
 			
-			if (xbox.getRawAxis(2) >= .25) {
+			//myRobot.arcadeDrive(driveStick , 1, driveStick, 2, true);  //Failed Attempt at Arcade Drive
+			
+			if (shooterXbox.getRawButton(1) == true) {		//A-button controls Winch
 				
-				intake.set(1);
-			
-			} else {
-			
-				intake.set(0);
-			
-			}
-		
-			if (xbox.getRawAxis(3) >= .25) {
-			
-				shooter.set(1);
-			
-			} else {
-			
-				shooter.set(0);
-			
-			}
-			
-			if (xbox.getRawButton(1) == true) {
-				
-				winch.set(1);
+				winch.set(-1);
 			
 			} else {
 			
@@ -189,51 +183,66 @@ public class Robot extends IterativeRobot {
 			
 			}
 			
-			if (driveStick.getRawButton(1)) {	
-
-				while(buttonPress) {
-
-					myRobot.arcadeDrive(.1, .5);
-					myRobot.arcadeDrive(.1, -.5);
-					rotateBot();
-
-				}
-			}
 		
 			if (driveStick.getRawButton(2)) {
 
 				myRobot.arcadeDrive(.1, .5);
 				myRobot.arcadeDrive(.1, -.5);
+				rotateBot();
 
 			}
 			
+			
+			if (shooterXbox.getRawAxis(2) >= .25) {		//Left Trigger controls Intake
+				
+				intake.set(-1);
+			
+			} else {
+			
+				intake.set(0);
+			
+			}
+			
+		
+			if (shooterXbox.getRawAxis(3) >= .25) {		//Right Trigger controls Shooter
+				
+				shooter.set(.475);
+				Timer.delay(.25);						//Gives the flywheel some time to gain speed
+				electricSolenoid.set(1);				//Sets the Fuel Gate up
+			
+			} else {
+			
+				shooter.set(0);
+				electricSolenoid.set(0);
+			
+			}
 			
 			
 			Timer.delay(0.005); // wait for a motor update time
 		}
 		
-		 SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
+		SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
 
-	          SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
+	    SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
 
-	          SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
+	    SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
 
 		
 
 
-	          SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
+	    SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
 
-	          SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
+	    SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
 
 		
 
 	         
 
-	          AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
+	    AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
 
-	          SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
+	    SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
 
-	          SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
+	    SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
 
 
 	}
