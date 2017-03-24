@@ -1,20 +1,16 @@
 package org.usfirst.frc.team5938.robot;
 
 import com.ctre.CANTalon;
+
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.VictorSP;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.cscore.UsbCamera;
-import edu.wpi.first.wpilibj.CameraServer;
-import edu.wpi.first.wpilibj.DriverStation;
-import java.lang.Math;
-
-import com.kauailabs.navx.frc.AHRS;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -24,96 +20,61 @@ import com.kauailabs.navx.frc.AHRS;
  * directory.
  */
 public class Robot extends IterativeRobot {
-	
-	final String defaultAuto = "Default";
-	final String customAuto = "My Auto";
-	String autoSelected;
-	SendableChooser<String> chooser;
-	
+
+	PowerDistributionPanel pdp = new PowerDistributionPanel();
+
+	double current;
+
 	RobotDrive myRobot;
-	
-	Joystick driveStick;
-	Joystick shooterXbox;
-	
-	Joystick leftXbox;
-	Joystick rightXbox;
-	
-	VictorSP electricSolenoid;
-	
-	CANTalon intake; //Device ID 1
-	CANTalon shooter; //Device ID 2
-	CANTalon winch; //Device ID 3
-	
+
+	Joystick xboxDrive;
+	Joystick xboxShooter;
+
+	VictorSP electricSolenoid = new VictorSP(2);
+
+	CANTalon intake; // Device ID 1
+	CANTalon shooter; // Device ID 2
+	CANTalon winch; // Device ID 3
+
 	UsbCamera cam;
 	UsbCamera cam1;
-	
-	AHRS ahrs;
-	boolean buttonPress;
-	int lowerAngle = 50;
-	int upperAngle = 75;
-	
+
+	Timer timer;
+
+	int autoLoopCounter;
+	boolean whichAuton;
+	boolean isFast;// true drive straight; false do nothing
 	public void onCamera() {
-		
+
 		cam = CameraServer.getInstance().startAutomaticCapture(0);
 		cam.setResolution(160, 120);
 		cam.setFPS(20);
 		cam1 = CameraServer.getInstance().startAutomaticCapture(1);
 		cam1.setResolution(160, 120);
-		cam1.setFPS(20); 
-		
+		cam1.setFPS(20);
+
 	}
-	
-	public void ahrsInit() {
-		
-		 try {
 
-	          ahrs = new AHRS(SPI.Port.kMXP); 
-
-	      } catch (RuntimeException ex ) {
-
-	          DriverStation.reportError("Error instantiating navX-MXP:  " + ex.getMessage(), true);
-
-	      }
-	
-	}
-	
-	
-	public void rotateBot() {
-		
-
-		if (lowerAngle <= ahrs.getYaw() && ahrs.getYaw() <= upperAngle) {
-
-			myRobot.drive(0, 0);
-			buttonPress = false;
-
-		}
-	}
-	
-	/**
-	 * This function is run when the robot is first started up and should be
-	 * used for any initialization code.
-	 */
 	@Override
 	public void robotInit() {
-		
-		chooser = new SendableChooser<>();
-		chooser.addDefault("Default Auto", defaultAuto);
-		chooser.addObject("My Auto", customAuto);
-		
-		SmartDashboard.putData("Auto choices", chooser);
-		onCamera();
-		ahrsInit();
-		
-		myRobot = new RobotDrive(0, 1); // class that handles basic drive operations
-		
-		shooterXbox = new Joystick(0);
-		driveStick = new Joystick(1); // set to ID 1 in DriverStation
-		intake = new CANTalon(1); 
+
+		timer = new Timer();
+
+		myRobot = new RobotDrive(0, 1); // class that handles basic drive
+										// operations
+
+		xboxShooter = new Joystick(1);
+		xboxDrive = new Joystick(0); // set to ID 1 in DriverStation
+		intake = new CANTalon(1);
 		shooter = new CANTalon(2);
-		winch = new CANTalon (3);
-		
-		electricSolenoid = new VictorSP(2);
-		
+		winch = new CANTalon(3);
+
+		whichAuton = true;
+		isFast = true;
+		onCamera();
+
+		// electricSolenoid.set(.75);
+
 	}
 
 	/**
@@ -129,8 +90,12 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		autoSelected = chooser.getSelected();
-		System.out.println("Auto selected: " + autoSelected);
+
+		autoLoopCounter = 0;
+
+		timer.reset();
+		timer.start();
+
 	}
 
 	/**
@@ -138,14 +103,12 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		switch (autoSelected) {
-		case customAuto:
-			// Put custom auto code here
-			break;
-		case defaultAuto:
-		default:
-			// Put default auto code here
-			break;
+
+		if (timer.get() < 4.6) {// Make slow side faster and fast side slower
+								// [Make sure power is the same in the drive
+								// logs
+			myRobot.drive(0.3, -.000029);
+
 		}
 	}
 
@@ -154,85 +117,64 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
-		
+
 		myRobot.setSafetyEnabled(true);
-		
+
 		while (isOperatorControl() && isEnabled()) {
-			
-			myRobot.tankDrive(Math.pow(shooterXbox.getRawAxis(5) * .87, 3), Math.pow(shooterXbox.getRawAxis(1) * .87, 3));
-			//Cubic acceleration decreases jolting, allowing for smoother driving
-			
-			
-			//myRobot.arcadeDrive(driveStick , 1, driveStick, 2, true);  //Failed Attempt at Arcade Drive
-			
-			if (shooterXbox.getRawButton(1) == true) {		//A-button controls Winch
-				
+
+			if (isFast == true) {
+				myRobot.tankDrive(xboxDrive.getRawAxis(5) * 1.0,
+						xboxDrive.getRawAxis(1) * .95);
+			} else {
+				myRobot.tankDrive(xboxDrive.getRawAxis(5) * .6,
+						xboxDrive.getRawAxis(1) * .6);
+
+			}
+
+			if (xboxShooter.getRawButton(1) == true) { // A-button
+														// controls winch
 				winch.set(-1);
-			
+
 			} else {
-			
+
 				winch.set(0);
-			
-			}
-			
-		
-			if (driveStick.getRawButton(2)) {
-
-				myRobot.arcadeDrive(.1, .5);
-				myRobot.arcadeDrive(.1, -.5);
-				rotateBot();
 
 			}
-			
-			
-			if (shooterXbox.getRawAxis(2) >= .25) {		//Left Trigger controls Intake
-				
+
+			if (xboxShooter.getRawAxis(2) >= .25) { // Left Trigger controls
+													// intake
 				intake.set(-1);
-			
+
 			} else {
-			
+
 				intake.set(0);
-			
+
 			}
-			
-		
-			if (shooterXbox.getRawAxis(3) >= .25) {		//Right Trigger controls Shooter
-				
-				shooter.set(.475);
-				Timer.delay(.25);						//Gives the flywheel some time to gain speed
-				electricSolenoid.set(1);				//Sets the Fuel Gate up
-			
+
+			if (xboxShooter.getRawAxis(3) >= .25) { // Right Trigger controls
+													// shooter
+				shooter.set(.5);
+
 			} else {
-			
+
 				shooter.set(0);
-				electricSolenoid.set(0);
-			
+				electricSolenoid.set(.75);
+
 			}
-			
-			
-			Timer.delay(0.005); // wait for a motor update time
+
+			if (xboxShooter.getRawButton(5)) {
+				isFast = true;
+
+			}
+
+			if (xboxShooter.getRawButton(6)) {
+
+				isFast = false;
+			}
+
+			Timer.delay(.005); // wait for a motor update time
+
 		}
-		
-		SmartDashboard.putBoolean(  "IMU_Connected",        ahrs.isConnected());
-
-	    	SmartDashboard.putBoolean(  "IMU_IsCalibrating",    ahrs.isCalibrating());
-
-	    	SmartDashboard.putNumber(   "IMU_Yaw",              ahrs.getYaw());
-
-		
-
-
-	    	SmartDashboard.putBoolean(  "IMU_IsMoving",         ahrs.isMoving());
-
-	    	SmartDashboard.putBoolean(  "IMU_IsRotating",       ahrs.isRotating());
-
-
-	    	AHRS.BoardYawAxis yaw_axis = ahrs.getBoardYawAxis();
-
-	    	SmartDashboard.putString(   "YawAxisDirection",     yaw_axis.up ? "Up" : "Down" );
-
-	    	SmartDashboard.putNumber(   "YawAxis",              yaw_axis.board_axis.getValue() );
-
 
 	}
 
@@ -242,6 +184,5 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void testPeriodic() {
 	}
-	
 
-}
+} // UPDATED on 3/11/17 - 3:28PM
