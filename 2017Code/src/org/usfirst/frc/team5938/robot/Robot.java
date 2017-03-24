@@ -6,11 +6,8 @@ import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.VictorSP;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -21,16 +18,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot {
 
-	PowerDistributionPanel pdp = new PowerDistributionPanel();
-
-	double current;
-
 	RobotDrive myRobot;
 
 	Joystick xboxDrive;
 	Joystick xboxShooter;
-
-	VictorSP electricSolenoid = new VictorSP(2);
 
 	CANTalon intake; // Device ID 1
 	CANTalon shooter; // Device ID 2
@@ -42,8 +33,8 @@ public class Robot extends IterativeRobot {
 	Timer timer;
 
 	int autoLoopCounter;
-	boolean whichAuton;
 	boolean isFast;// true drive straight; false do nothing
+
 	public void onCamera() {
 
 		cam = CameraServer.getInstance().startAutomaticCapture(0);
@@ -69,11 +60,8 @@ public class Robot extends IterativeRobot {
 		shooter = new CANTalon(2);
 		winch = new CANTalon(3);
 
-		whichAuton = true;
 		isFast = true;
 		onCamera();
-
-		// electricSolenoid.set(.75);
 
 	}
 
@@ -131,6 +119,16 @@ public class Robot extends IterativeRobot {
 
 			}
 
+			if (xboxShooter.getRawButton(5)) {
+				isFast = true;
+
+			}
+
+			if (xboxShooter.getRawButton(6)) {
+
+				isFast = false;
+			}
+
 			if (xboxShooter.getRawButton(1) == true) { // A-button
 														// controls winch
 				winch.set(-1);
@@ -158,18 +156,7 @@ public class Robot extends IterativeRobot {
 			} else {
 
 				shooter.set(0);
-				electricSolenoid.set(.75);
 
-			}
-
-			if (xboxShooter.getRawButton(5)) {
-				isFast = true;
-
-			}
-
-			if (xboxShooter.getRawButton(6)) {
-
-				isFast = false;
 			}
 
 			Timer.delay(.005); // wait for a motor update time
@@ -185,4 +172,4 @@ public class Robot extends IterativeRobot {
 	public void testPeriodic() {
 	}
 
-} // UPDATED on 3/11/17 - 3:28PM
+} // UPDATED on 3/24/17 - 7:10PM
