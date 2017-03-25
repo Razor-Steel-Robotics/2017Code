@@ -1,13 +1,12 @@
 package org.usfirst.frc.team5938.robot;
 
 import com.ctre.CANTalon;
-
-import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.cscore.UsbCamera;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -31,8 +30,7 @@ public class Robot extends IterativeRobot {
 	UsbCamera cam1;
 
 	Timer timer;
-
-	int autoLoopCounter;
+	
 	boolean isFast;// true drive straight; false do nothing
 
 	public void onCamera() {
@@ -78,8 +76,6 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-
-		autoLoopCounter = 0;
 
 		timer.reset();
 		timer.start();
